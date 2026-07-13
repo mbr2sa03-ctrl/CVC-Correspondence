@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>កម្មវិធី CVC · CVC App</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root{
+  --bg:#F6F3EC; --panel:#FFFFFF; --ink:#17302C; --ink-soft:#4C6360;
+  --teal:#0B5E56; --teal-deep:#093F3B; --gold:#D89B3C; --gold-soft:#F2D9AE;
+  --red:#B5473A; --red-soft:#F6E1DE; --green-soft:#DCEAE2; --line:#E4DECD; --radius:14px;
+}
+*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html,body{ margin:0; padding:0; background:var(--bg); color:var(--ink); font-family:'Inter','Noto Sans Khmer',sans-serif; -webkit-font-smoothing:antialiased; }
+.khmer{ font-family:'Noto Sans Khmer','Inter',sans-serif; }
+#app{ max-width:560px; margin:0 auto; min-height:100vh; padding-bottom:70px; }
+
+/* top bar */
+.topbar{
+  position:sticky; top:0; z-index:20; background:linear-gradient(135deg,var(--teal-deep),var(--teal));
+  color:#EAF3F1; padding:14px 16px calc(14px + env(safe-area-inset-top,0px));
+  padding-top:calc(14px + env(safe-area-inset-top,0px));
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  box-shadow:0 4px 14px rgba(9,63,59,.25);
+}
+.topbar .t1{ font-weight:800; font-size:15px; }
+.topbar .t2{ font-size:11px; opacity:.75; margin-top:1px; }
+.iconbtn{ background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.25); color:#EAF3F1; width:38px; height:38px; border-radius:10px; font-size:16px; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; }
+.iconbtn:active{ transform:scale(.94); }
+.iconbtn.spinning{ animation:spin 1s linear infinite; }
+@keyframes spin{ from{transform:rotate(0)} to{transform:rotate(360deg)} }
+
+.main{ padding:16px 14px 10px; }
+
+/* card */
+.card{ background:var(--panel); border-radius:var(--radius); padding:16px 16px; box-shadow:0 1px 2px rgba(23,48,44,.06),0 10px 22px -12px rgba(23,48,44,.18); border:1px solid var(--line); margin-bottom:14px; }
+.label{ font-size:11.5px; font-weight:700; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.3px; margin-bottom:7px; display:block; }
+.select, .input, textarea.ta{ border:1px solid var(--line); border-radius:9px; padding:11px 12px; font-size:14px; font-family:inherit; background:#fff; color:var(--ink); width:100%; }
+textarea.ta{ min-height:64px; resize:vertical; }
+.help{ font-size:12px; color:var(--ink-soft); line-height:1.6; background:#F4F1E8; border-radius:9px; padding:10px 12px; border:1px dashed var(--line); margin-top:10px; }
+.warn{ font-size:12.5px; line-height:1.6; background:var(--red-soft); color:var(--red); border-radius:9px; padding:10px 12px; margin-bottom:14px; }
+
+/* segmented view switch */
+.segwrap{ display:flex; background:#EFE9D9; border-radius:12px; padding:4px; gap:4px; margin-bottom:14px; }
+.seg{ flex:1; text-align:center; padding:10px 6px; border-radius:9px; font-size:12.5px; font-weight:700; cursor:pointer; color:var(--ink-soft); }
+.seg.active{ background:#fff; color:var(--teal-deep); box-shadow:0 2px 6px rgba(23,48,44,.15); }
+.seg .n{ display:inline-block; margin-left:5px; background:var(--gold); color:#2A1B04; border-radius:10px; padding:1px 7px; font-size:10.5px; }
+
+/* kpis */
+.kpis{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:14px; }
+.kpi{ background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:10px 6px; text-align:center; }
+.kpi .num{ font-size:19px; font-weight:800; }
+.kpi .lbl{ font-size:9.5px; color:var(--ink-soft); font-weight:700; text-transform:uppercase; letter-spacing:.2px; margin-top:2px; }
+.kpi.red .num{ color:var(--red); }
+.kpi.teal .num{ color:var(--teal); }
+.kpi.gold .num{ color:#A8701F; }
+
+.searchwrap{ position:relative; margin-bottom:14px; }
+.searchwrap .ic{ position:absolute; left:12px; top:50%; transform:translateY(-50%); opacity:.55; }
+.searchwrap input{ padding-left:36px; }
+
+/* item card */
+.item{ background:var(--panel); border:1px solid var(--line); border-left:4px solid var(--line); border-radius:12px; padding:14px 15px; margin-bottom:12px; box-shadow:0 1px 2px rgba(23,48,44,.06); }
+.item.overdue{ border-left-color:var(--red); }
+.item.pending{ border-left-color:var(--gold); }
+.item.done{ border-left-color:#1E6B45; opacity:.68; }
+.item.cannot{ border-left-color:var(--ink-soft); opacity:.85; }
+.item .name{ font-weight:800; font-size:15px; }
+.item .id{ font-family:monospace; font-weight:400; font-size:11px; color:var(--ink-soft); }
+.item .meta{ font-size:12px; color:var(--ink-soft); margin-top:4px; line-height:1.55; }
+.item .cvcline{ font-size:12px; margin-top:4px; }
+.badge{ display:inline-block; padding:3px 9px; border-radius:20px; font-size:10.5px; font-weight:700; }
+.b-sponsored{ background:var(--green-soft); color:#1E6B45; }
+.b-available{ background:#E1EBF7; color:#1E4E8C; }
+.b-hold{ background:var(--gold-soft); color:#8C5A0F; }
+.b-left{ background:#ECE7E1; color:#6B6459; }
+.b-pending{ background:var(--gold-soft); color:#8C5A0F; }
+.b-overdue{ background:var(--red-soft); color:var(--red); }
+.b-closed{ background:var(--green-soft); color:#1E6B45; }
+.days{ font-weight:700; font-size:11.5px; margin-top:8px; display:inline-block; padding:3px 10px; border-radius:20px; }
+.days.overdue{ background:var(--red-soft); color:var(--red); }
+.days.soon{ background:var(--gold-soft); color:#8C5A0F; }
+.days.ok{ background:var(--green-soft); color:#1E6B45; }
+.statusline{ font-size:12px; margin-top:8px; }
+
+.actions{ display:flex; gap:7px; margin-top:12px; flex-wrap:wrap; }
+.actions button{ flex:1; min-width:30%; padding:12px 6px; border-radius:10px; border:1px solid var(--line); background:#fff; font-weight:700; font-size:11.5px; cursor:pointer; line-height:1.3; color:var(--ink); }
+.actions button:active{ transform:translateY(1px); }
+.actions button.on-done{ background:var(--green-soft); border-color:#1E6B45; color:#1E6B45; }
+.actions button.on-pending{ background:var(--gold-soft); border-color:#8C5A0F; color:#8C5A0F; }
+.actions button.on-cannot{ background:var(--red-soft); border-color:var(--red); color:var(--red); }
+.reasonbox{ margin-top:10px; }
+.reasonbox textarea{ width:100%; }
+.reasonbox .save{ margin-top:8px; width:100%; padding:11px; border-radius:9px; border:none; background:linear-gradient(135deg,var(--teal),var(--teal-deep)); color:#fff; font-weight:700; font-size:12.5px; cursor:pointer; }
+
+.btn{ background:linear-gradient(135deg,var(--teal),var(--teal-deep)); color:#fff; border:none; padding:11px 16px; border-radius:10px; font-weight:700; font-size:12.5px; cursor:pointer; width:100%; }
+.btn.ghost{ background:#fff; color:var(--teal-deep); border:1px solid var(--line); }
+.rowbtn{ margin-bottom:14px; }
+
+.empty{ text-align:center; padding:40px 10px; color:var(--ink-soft); }
+.empty .big{ font-size:40px; margin-bottom:10px; }
+.empty div{ font-size:13px; line-height:1.6; }
+
+.toast{ position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(10px); background:var(--teal-deep); color:#fff; padding:11px 18px; border-radius:30px; font-size:12.5px; font-weight:600; opacity:0; pointer-events:none; transition:all .25s; z-index:999; box-shadow:0 8px 20px rgba(0,0,0,.3); max-width:88vw; text-align:center; }
+.toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+.spinner-block{ text-align:center; padding:50px 10px; color:var(--ink-soft); font-size:13px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <div>
+      <div class="t1">📱 កម្មវិធីសម្រាប់ CVC</div>
+      <div class="t2">CVC App — Correspondence &amp; Hold RC</div>
+    </div>
+    <div id="btnRefresh" class="iconbtn" title="ទាញយកទិន្នន័យចុងក្រោយ · Refresh data">🔄</div>
+  </div>
+  <div class="main" id="main"><div class="spinner-block">កំពុងផ្ទុក… · Loading…</div></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<!-- ============================= FIREBASE (shared storage) ============================= -->
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script>
+/* =========================================================================
+   FIREBASE SETUP
+   -------------------------------------------------------------------------
+   This app shares its data with your main dashboard (index.html) through
+   the SAME Firebase project. Paste the EXACT SAME firebaseConfig you used
+   in index.html below — that is what makes the two apps see the same RC
+   list, correspondence, and village → CVC assignments.
+
+   If you haven't set up Firebase yet, see the setup steps in index.html's
+   own FIREBASE SETUP comment block (search for "FIREBASE SETUP" near the
+   top of that file) — do it once, then copy the same config into both files.
+   ========================================================================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyBtHvbtxFFkaN09MqSN2CGwiKobzuQJS_M",
+  authDomain: "mbr2-dashboard.firebaseapp.com",
+  projectId: "mbr2-dashboard",
+  storageBucket: "mbr2-dashboard.firebasestorage.app",
+  messagingSenderId: "122727869591",
+  appId: "1:122727869591:web:76a9f92a2740b40a920dd2"
+};
+const _fbReady = firebaseConfig.apiKey !== "YOUR_API_KEY";
+let _authPromise = null;
+function _ensureAuth(){
+  if(!_fbReady) return Promise.reject(new Error('Firebase not configured'));
+  if(!_authPromise){
+    _authPromise = new Promise((resolve, reject) => {
+      firebase.auth().onAuthStateChanged(user => { if(user) resolve(user); });
+      firebase.auth().signInAnonymously().catch(reject);
+    });
+  }
+  return _authPromise;
+}
+function _sanitizeKey(key){ return String(key).replace(/\//g, '_'); }
+if(_fbReady) firebase.initializeApp(firebaseConfig);
+const _db = _fbReady ? firebase.firestore() : null;
+
+/* ---- chunked document storage (must match index.html's implementation exactly —
+   this app reads sd:rc:v1 / sd:corr:v1, which index.html writes in chunks once they
+   exceed Firestore's ~1MB per-document limit) ---- */
+const _CHUNK_CHARS = 250000;
+async function _fbSetChunked(collRef, docId, value){
+  const docRef = collRef.doc(docId);
+  if(value.length <= _CHUNK_CHARS){
+    await docRef.set({ value, chunked: false, chunkCount: 0, updatedAt: Date.now() });
+    await _fbCleanupChunks(collRef, docId, 0);
+    return;
+  }
+  const chunks = [];
+  for(let i=0; i<value.length; i+=_CHUNK_CHARS) chunks.push(value.slice(i, i+_CHUNK_CHARS));
+  await Promise.all(chunks.map((c, idx) => collRef.doc(docId+'__c'+idx).set({ value: c, updatedAt: Date.now() })));
+  await docRef.set({ chunked: true, chunkCount: chunks.length, updatedAt: Date.now() });
+  await _fbCleanupChunks(collRef, docId, chunks.length);
+}
+async function _fbCleanupChunks(collRef, docId, fromIndex){
+  const dels = [];
+  for(let i=fromIndex; i<fromIndex+40; i++){
+    const snap = await collRef.doc(docId+'__c'+i).get();
+    if(!snap.exists) break;
+    dels.push(collRef.doc(docId+'__c'+i).delete());
+  }
+  if(dels.length) await Promise.all(dels);
+}
+async function _fbGetChunked(collRef, docId){
+  const snap = await collRef.doc(docId).get();
+  if(!snap.exists) return null;
+  const data = snap.data();
+  if(!data.chunked) return data.value;
+  const chunkSnaps = await Promise.all(Array.from({ length: data.chunkCount }, (_, i) => collRef.doc(docId+'__c'+i).get()));
+  return chunkSnaps.map(s => s.exists ? s.data().value : '').join('');
+}
+async function _fbDeleteChunked(collRef, docId){
+  await collRef.doc(docId).delete();
+  await _fbCleanupChunks(collRef, docId, 0);
+}
+
+window.storage = {
+  async get(key, shared){
+    if(!shared){
+      const v = localStorage.getItem('sd_personal_' + key);
+      return v !== null ? { key, value:v, shared:false } : null;
+    }
+    await _ensureAuth();
+    const value = await _fbGetChunked(_db.collection('shared'), _sanitizeKey(key));
+    return value !== null ? { key, value, shared:true } : null;
+  },
+  async set(key, value, shared){
+    if(!shared){
+      localStorage.setItem('sd_personal_' + key, value);
+      return { key, value, shared:false };
+    }
+    await _ensureAuth();
+    await _fbSetChunked(_db.collection('shared'), _sanitizeKey(key), value);
+    return { key, value, shared:true };
+  },
+  async delete(key, shared){
+    if(!shared){
+      localStorage.removeItem('sd_personal_' + key);
+      return { key, deleted:true, shared:false };
+    }
+    await _ensureAuth();
+    await _fbDeleteChunked(_db.collection('shared'), _sanitizeKey(key));
+    return { key, deleted:true, shared:true };
+  }
+};
+</script>
+
+<!-- ============================= APP LOGIC ============================= -->
+<script>
+(function(){
+
+/* ---- storage keys (SAME names as index.html, so RC/correspondence/village
+   assignment data is read directly from what the admin dashboard has already
+   imported — this app never writes to these three, only reads them) ---- */
+const KEY_RC       = 'sd:rc:v1';
+const KEY_CORR     = 'sd:corr:v1';
+const KEY_SETTINGS = 'sd:settings:v1';
+const KEY_CVCMAP   = 'sd:cvcmap:v1';
+const KEY_CVC_SELF = 'sd:cvcself:v1'; // personal (per-phone), not shared
+
+/* This app's OWN data — kept in small, separate shared documents (never
+   inside the big RC/correspondence blobs) so that:
+   1) An admin re-importing a fresh Horizon report in index.html can never
+      wipe out a CVC's recorded progress.
+   2) Two CVC phones saving around the same moment can't stomp on each
+      other's work — each save re-reads the latest overlay, merges in just
+      the one item being changed, and writes back immediately (small,
+      fast, low collision risk), instead of rewriting the whole dataset. */
+const KEY_CORR_ACTS = 'sd:corracts:v1'; // { "childId::corrKey": {status,reason,by,at} }
+const KEY_HOLD_ACTS = 'sd:holdacts:v1'; // { "childId": {status,reason,by,at} }
+const SHARED = true;
+
+const ADMIN_CVC = '__ADMIN__';
+const TEAM_LEADER_CVC = '__TEAM_LEADER__';
+
+/* Village (Khmer) -> CVC (Khmer) name, from the CVC list you provided.
+   Used to auto-seed the shared assignment the first time this app (or
+   index.html) runs, if nothing has been assigned yet. After that, the
+   shared sd:cvcmap:v1 value (editable from index.html → Settings) is
+   always the source of truth — this list is only a one-time starting point. */
+const DEFAULT_CVC_MAP_PAIRS = [["បឹងវែង", "កង ស្រីឃួច"], ["ព្រះស្រែ", "កាំង ពៅ"], ["គោកក្តួច", "ការ តុលា"], ["តាឡំកណ្តាល", "កុល សូដា"], ["ដងរុនលិច", "ក្រឹម សូរិយា"], ["តាឡំចុង", "ទួន វិច្ឆិកា"], ["ស្រះរាំង", "ខា ស៊ីនួន"], ["ឃីឡិក", "ខុងចាន់រី"], ["តាអ៊ិន២", "គាំ បូរី"], ["ដងរុនលិច", "គាំឈុនអាយ"], ["ព្រះស្រែ", "គិម ឡៃហៀក"], ["តាអ៊ិន២", "គិមយូ"], ["ដងរុនកើត", "ឃ្លិនសៅហួត"], ["តាឡំកណ្តាល", "ង៉ា ងួន"], ["ដងរុនកើត", "ចក់់ឈួម"], ["ពង្រ", "ចំរើន ឡង់"], ["គោកច្រាប", "ចាន់ សុខី"], ["តាអ៊ិន១", "ចាន់រីន"], ["ឃីឡិក", "ចាន់ហាន"], ["អូរអណ្តូងកើត", "ចិន សត្វទ្រី"], ["បឹងឃ្លាំងលិច", "ចៅ យិន"], ["បឹងវែង", "ឆាម ណារ៉ូន"], ["បឹងវែង", "ឆាយ តុងឈាក"], ["តាឡំកណ្តាល", "ឆឺយ ឆឺត"], ["ព្រះស្រែ", "ស៊ុំ ស្រីហួង"], ["បន្ទាយនាង", "ជា សារុំ"], ["ចុងគោក", "ជា សាវ៉ុង"], ["ភ្នំ", "ជិត សារឿម"], ["ចុងគោក", "ជួន​ ផល្លា"], ["ព្រះស្រែ", "ឈួន សុភាព"], ["គោកក្រសាំង", "ញិក សាវ៉ាត"], ["ដងរុនលិច", "ដន ចាន់ណា"], ["គោកទន្លាប់", "ដួង សៃណយ"], ["ខ្លាខាំឆ្កែ", "ឌុក សេង"], ["អូរអណ្តូងលិច", "ឌុច ចាន់កែវ"], ["គោកទន្លាប់", "ឌួង គឹមហួយ"], ["ស្រះរាំង", "ណំ ស៊ីថា"], ["បឹងឃ្លាំងកើត", "តុល ព្រឿត"], ["គោកច្រាប", "ទួត សាវៃ"], ["គោកព្នៅ", "ទេព ចំរ៉ុង"], ["តាអ៊ិន២", "ទេពសៅនី​"], ["អូរអណ្តូងកណ្តាល", "ធំ បញ្ញា"], ["បឹងឃ្លាំងលិច", "ធិញ កញ្ញា"], ["សំរោងពេន", "សេម ធិន"], ["គោកស្រុក", "នន់ ជីវិន"], ["គោកស្រុក", "នន់ សាវាង"], ["អូរធំ", "នាម រ៉ា"], ["ភ្នំ", "ប៉ង់ យ៉ុម"], ["ព្រៃចង្ហាកើត", "ប៉ិច ស្រីមុំ"], ["ព្រៃចង្ហាលិច", "ប៊ុន យ៊ុន"], ["ចុងគោក", "ប៊ូ ទុំ"], ["តាឡំចុង", "ប៊ូ ទុំ"], ["ខ្លាខាំឆ្កែ", "បួន គិមលុយ"], ["ខ្លាខាំឆ្កែ", "ប៉ោ ទី"], ["បន្ទាយនាង", "បោស សុភឿយ"], ["អូរធំ", "នាម សុរ៉េត"], ["គោកក្រសាំង", "ប្រាណ ប្រប"], ["គោកក្តួច", "ផ សារួន"], ["ដងរុនកើត", "ពេញឡៃហ៊ាង"], ["តាឡំចុង", "ព្រីង ជឿន"], ["បន្ទាយនាង", "ភាន់ ស្រីមុំ"], ["គោកព្នៅ", "ង៉ុក យ៉ុត"], ["ត្រាង", "ភុំ ចន្ទ្រា"], ["ត្របែក", "ភុន ភីរ៉ាក់នុត"], ["តាឡំចុង", "ភូ សៀងថៃ"], ["ដងរុនកើត", "ម៉ក់និន"], ["បន្ទាយនាង", "ម៉ាន់ គង់"], ["តាចាន់", "មាន តាំងជី"], ["ក្រូច", "មូល ធីតា"], ["ក្រូច", "មូល ធីតា"], ["ក្រូច", "មូល ស្រីមុំ"], ["តាចាន់", "យ៉ាន់ សាវ័ន"], ["បឹងឃ្លាំងលិច", "យឺ ចាន់រ៉ា"], ["គោកទន្លាប់", "យូ លៀង"], ["អូរធំ", "ផល ផានិត"], ["អូរធំ", "ទុំ គឹមហុង"], ["បឹងវែង", "រ៉ន ស៊ីណាត"], ["បឹងវែង", "រ៉ន ស៊ីនួន"], ["ចំការចេក", "មាន សុខហឿន"], ["តាឡំកណ្តាល", "រួម រចនា"], ["ត្រាង", "ភូ ច្រឹប"], ["តាចាន់", "រើន ភារី"], ["អូរអណ្តូងកើត", "រឿ សុខឌី"], ["ភ្នំ", "គង់ វិឆ្ឆ័យ"], ["ភ្នំ", "សុត ផល្លី"], ["ពង្រ", "រឿន​ មុំ"], ["ពង្រ", "រឿន មួយ"], ["ចំការចេក", "រៀម ផល្លា"], ["បឹងឃ្លាំងកើត", "រៀល ណារីន"], ["ខ្លាខាំឆ្កែ", "រ៉ែម សារាយ"], ["ព្រៃចង្ហាលិច", "លន់ ហូល"], ["អូរអណ្តូងលិច", "លាច ភារុន"], ["បឹងឃ្លាំងកើត", "វ៉ន សឹងអូន"], ["អូរអណ្តូងកណ្តាល", "វឿន រំភើប"], ["ព្រៃចង្ហាលិច", "សំ ជិនណារី"], ["ព្រៃចង្ហាលិច", "សំ សៀវលិញ"], ["ស្រះរាំង", "ស្រេង លក្ខិណា"], ["គោកច្រាប", "អ៊ា សុភាន់"], ["សំរោងពេន", "សយកេសរ"], ["ត្របែក", "សល់សំណាង"], ["អូរអណ្តូងកណ្តាល", "សាំង សីហា"], ["បឹងឃ្លាំងកើត", "ស៊ាន សារ៉ាត់"], ["តាឡំចុង", "សាប់ គឹមហួន"], ["តាអ៊ិន១", "សាមឿត"], ["គោកស្រុក", "សាយ ប៊ុនស៊ុង"], ["ក្រូច", "សាយ យុយ"], ["គោកទន្លាប់", "សារឿន រីណា"], ["បឹងឃ្លាំងលិច", "សុខ នឿង"], ["ព្រៃចង្ហាលិច", "សុខ វុន"], ["តាអ៊ិន១", "សុខរតនា"], ["តាអ៊ិន១", "សុខវត្ថា"], ["ត្របែក", "សុខសៅរ័ត្ន"], ["គោកព្នៅ", "បៅ សូនី"], ["គោកក្តួច", "សឿង គឹមហេង"], ["ព្រៃចង្ហាកើត", "សែត សាវឿន"], ["ត្របែក", "សេកវ៉ុន"], ["គោកទន្លាប់", "សេង រដ្ឋា"], ["ព្រះស្រែ", "សោម​ សុភឿត"], ["អូរអណ្តូងកណ្តាល", "សៅ វ៉ាន់ធីន"], ["អូរអណ្តូងលិច", "ស្រី លីន"], ["បឹងឃ្លាំងកើត", "ហម រតនៈ"], ["បឹងឃ្លាំងកើត", "ហម ស្រីនីត"], ["អូរអណ្តូងកើត", "ហ៊ា ចន្ថា"], ["អូរអណ្តូងកើត", "ហាច ចរា"], ["តាឡំកណ្តាល", "ហួ គិមហួន"], ["គោកក្រសាំង", "ហួត វ៉ាន់ឈួ"], ["តាឡំចុង", "ហួត សេងហួយ"], ["គោកក្រសាំង", "ឡត ណាឡែន"], ["ពង្រ", "ឡា ដឿន"], ["ខ្លាខាំឆ្កែ", "ឡិក យូ"], ["អូរអណ្តូងកណ្តាល", "ឡិន សូវៀត"], ["ភ្នំ", "អាន់ សីហា"], ["ចុងគោក", "អិន ថូវ"], ["បឹងឃ្លាំងលិច", "អ៊ីង លាង"], ["បឹងឃ្លាំងលិច", "អ៊ីង វាសនា"], ["គោកទន្លាប់", "អ៊ីវ សំបូរ"], ["អូរអណ្តូងលិច", "អ៊ុច ចន្ដាមុន្នី"], ["អូរអណ្តូងកណ្តាល", "តឿក កក្កដា"], ["ខ្លាខាំឆ្កែ", "អុិត ឡាដា"], ["អូរអណ្តូងកើត", "អោក គិមអេង"], ["ឃីឡិក", "ស៊ុន សម្បត្តិ​"], ["អូរអណ្តូងលិច", "អឿន សាក់សិ"], ["អូរអណ្តូងកើត", "ម៉ន មីនា"], ["ចំការចេក", "មាន សុខុន"], ["ព្រៃចង្ហាកើត", "សោម ឡូញ"], ["សំរោងពេន", "រ៉េត រតនៈ"], ["បឹងវែង", "ភួន គឹមយុិន"], ["បឹងវែង", "ឡុង គឹមលីន"]];
+
+const STATUS_LABEL = {
+  sponsored:{ kh:'មានឧបត្ថម្ភ', en:'Sponsored', cls:'b-sponsored' },
+  available:{ kh:'អាចឧបត្ថម្ភបាន', en:'Available', cls:'b-available' },
+  hold:{ kh:'ផ្អាកបណ្ដោះអាសន្ន', en:'On Hold', cls:'b-hold' },
+  left:{ kh:'ចាកចេញពីកម្មវិធី', en:'Left Programme', cls:'b-left' },
+  unclassified:{ kh:'មិនទាន់កំណត់', en:'Unclassified', cls:'b-hold' }
+};
+const CORR_TYPE_KH = {
+  'introduction letter':'លិខិតណែនាំ', 'sponsor letter':'លិខិតអ្នកឧបត្ថម្ភ',
+  'sponsor letter/gift':'លិខិតអ្នកឧបត្ថម្ភ/អំណោយ', 'greeting card':'កាតជូនពរ',
+  'gift notification':'សេចក្តីជូនដំណឹងអំណោយ', 'query':'សំណួរ',
+  'progress report':'របាយការណ៍វឌ្ឍនភាព', 'annual progress report':'របាយការណ៍វឌ្ឍនភាពប្រចាំឆ្នាំ',
+  'e-letter':'អ៊ីលិខិត'
+};
+function corrTypeKh(raw){ if(!raw) return ''; return CORR_TYPE_KH[String(raw).trim().toLowerCase()] || raw; }
+
+const CVC_STATUS_META = {
+  done:{ kh:'បានធ្វើរួច', en:'Done', cls:'b-closed' },
+  pending:{ kh:'កំពុងរង់ចាំ', en:'Pending', cls:'b-pending' },
+  cannot:{ kh:'មិនអាចធ្វើបាន', en:"Can't process", cls:'b-overdue' }
+};
+const HOLD_STATUS_META = {
+  inprogress:{ kh:'កំពុងដោះស្រាយ', en:'In progress', cls:'b-pending' },
+  resolved:{ kh:'ដោះស្រាយរួច', en:'Resolved', cls:'b-closed' },
+  cannot:{ kh:'មិនអាចទាក់ទងបាន', en:"Can't reach family", cls:'b-overdue' }
+};
+
+const VILLAGE_NAME_KH_MAP = { 'chong kouk':'ចុងគោក' };
+function normalizeVillageName(raw){
+  if(!raw) return '';
+  let s = String(raw).trim();
+  s = s.replace(/^community\s*[:\-]\s*/i, '');
+  s = s.replace(/^[A-Za-z]{1,4}\d{2,6}-\d{3,8}-\s*/, '');
+  s = s.trim();
+  if(!s) return '';
+  return VILLAGE_NAME_KH_MAP[s.toLowerCase()] || s;
+}
+function esc(s){ return (s===undefined||s===null) ? '' : String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+function parseDate(v){
+  if(!v) return null;
+  const s = String(v).trim();
+  if(!s) return null;
+  let d = new Date(s);
+  if(!isNaN(d.getTime())) return d;
+  const m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+  if(m){ let [ , a,b,y ] = m; if(y.length===2) y = '20'+y; d = new Date(`${y}-${b.padStart(2,'0')}-${a.padStart(2,'0')}`); if(!isNaN(d.getTime())) return d; }
+  return null;
+}
+function daysUntil(dateStr){
+  const d = parseDate(dateStr);
+  if(!d) return null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const dd = new Date(d); dd.setHours(0,0,0,0);
+  return Math.round((dd - today) / 86400000);
+}
+function daysSince(dateStr){
+  const d = parseDate(dateStr);
+  if(!d) return null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const dd = new Date(d); dd.setHours(0,0,0,0);
+  return Math.round((today - dd) / 86400000);
+}
+// Same classification as index.html's Correspondence dashboard tab: prefer Horizon's
+// own raw status text (c.Status, e.g. "Pending Overdue") when present, and only fall
+// back to the RouteDate field when there's no status text. A record can carry a
+// RouteDate and still be genuinely "Pending" in Horizon, so RouteDate alone is not
+// a safe test for "closed" — this must match index.html exactly or the two apps
+// disagree about which correspondence is still open.
+function corrCategory(c){
+  const raw = String(c.Status || '').trim().toLowerCase();
+  if(raw){
+    const isPending = raw.includes('pending');
+    const isOverdue = raw.includes('overdue');
+    if(isPending) return isOverdue ? 'pendingOverdue' : 'pendingCurrent';
+    if(raw.includes('closed')) return isOverdue ? 'closedOverdue' : 'closedOnTime';
+  }
+  const due = parseDate(c.Due);
+  if(c.RouteDate){
+    const rd = parseDate(c.RouteDate);
+    const onTime = due && rd ? rd <= due : true;
+    return onTime ? 'closedOnTime' : 'closedOverdue';
+  } else if(due && due < new Date()){
+    return 'pendingOverdue';
+  }
+  return 'pendingCurrent';
+}
+function classifyStatus(rawStatus){
+  if(!rawStatus) return 'unclassified';
+  const key = String(rawStatus).trim().toLowerCase();
+  if(SETTINGS.statusMap && SETTINGS.statusMap[key]) return SETTINGS.statusMap[key];
+  if(/left|graduat|exit|withdraw|deceas|transfer/.test(key)) return 'left';
+  if(/hold|suspend/.test(key)) return 'hold';
+  if(/available|waiting|unsponsor/.test(key)) return 'available';
+  if(/sponsor/.test(key)) return 'sponsored';
+  return 'unclassified';
+}
+function villageNameOf(r){
+  const v = (r.VillageKh && r.VillageKh.trim()) || normalizeVillageName(r.CommunityName);
+  return v || 'មិនបញ្ជាក់ · Unspecified';
+}
+function khChildNameFor(r, fallback){
+  return (r && (r.ChildNameKh || r.ChildNameEn)) || fallback || '—';
+}
+
+/* ---- state ---- */
+const DEFAULT_SETTINGS = { statusMap:{}, monitoringDays:{} };
+let SETTINGS = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
+let DB = { rc:{}, corr:{}, cvcMap:{} };
+let CORR_ACTS = {}; // "childId::corrKey" -> {status,reason,by,at}
+let HOLD_ACTS = {}; // "childId" -> {status,reason,by,at}
+let SELECTED_CVC = null;
+let CVC_VIEW = 'corr'; // 'corr' | 'hold'
+let HIDE_DONE = true;
+let SEARCH_Q = '';
+let REASON_OPEN = {};
+let REASON_DRAFTS = {};
+let LOADED = false;
+let LOAD_ERROR = null;
+
+const mainEl = document.getElementById('main');
+const refreshBtn = document.getElementById('btnRefresh');
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(showToast._tm);
+  showToast._tm = setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+function cvcForChild(childId){
+  const r = DB.rc[childId];
+  if(!r) return '';
+  const candidates = [r.VillageKh, normalizeVillageName(r.CommunityName), r.CommunityName]
+    .map(v => (v||'').trim()).filter(Boolean);
+  if(!candidates.length) return '';
+  const map = DB.cvcMap || {};
+  for(const c of candidates){ if(map[c]) return map[c]; }
+  const normCandidates = candidates.map(c => c.toLowerCase());
+  for(const village in map){
+    if(normCandidates.includes(village.trim().toLowerCase())) return map[village];
+  }
+  return '';
+}
+function allCvcNames(){
+  const set = new Set(Object.values(DB.cvcMap || {}).filter(Boolean));
+  return Array.from(set).sort((a,b) => a.localeCompare(b));
+}
+
+/* ---- load ---- */
+async function loadAll(){
+  LOAD_ERROR = null;
+  if(!_fbReady){ LOADED = true; return; }
+  try{
+    const [rc, corr, st, cm, self, corracts, holdacts] = await Promise.all([
+      window.storage.get(KEY_RC, SHARED),
+      window.storage.get(KEY_CORR, SHARED),
+      window.storage.get(KEY_SETTINGS, SHARED),
+      window.storage.get(KEY_CVCMAP, SHARED),
+      window.storage.get(KEY_CVC_SELF, false),
+      window.storage.get(KEY_CORR_ACTS, SHARED),
+      window.storage.get(KEY_HOLD_ACTS, SHARED)
+    ]);
+    DB.rc = rc ? JSON.parse(rc.value) : {};
+    DB.corr = corr ? JSON.parse(corr.value) : {};
+    SETTINGS = st ? Object.assign({}, DEFAULT_SETTINGS, JSON.parse(st.value)) : JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
+    DB.cvcMap = cm ? JSON.parse(cm.value) : {};
+    SELECTED_CVC = (self && self.value) ? self.value : null;
+    CORR_ACTS = corracts ? JSON.parse(corracts.value) : {};
+    HOLD_ACTS = holdacts ? JSON.parse(holdacts.value) : {};
+
+    // First-run convenience: if nobody has assigned any village -> CVC yet,
+    // seed it from the CVC list you provided, and save it to shared storage
+    // so index.html's Settings → Village/CVC Assignment shows the same thing.
+    if(!Object.keys(DB.cvcMap).length && DEFAULT_CVC_MAP_PAIRS.length){
+      const seeded = {};
+      DEFAULT_CVC_MAP_PAIRS.forEach(([village, cvc]) => { if(village && cvc) seeded[village] = cvc; });
+      DB.cvcMap = seeded;
+      try{ await window.storage.set(KEY_CVCMAP, JSON.stringify(DB.cvcMap), SHARED); }catch(e){}
+    }
+  }catch(e){
+    LOAD_ERROR = e;
+  }
+  LOADED = true;
+}
+
+/* Read-merge-write a single entry into a small shared overlay document.
+   Re-fetches right before writing so a slow page load elsewhere doesn't
+   cause this save to clobber someone else's more recent change. */
+async function saveOverlayEntry(key, mapKey, entry){
+  let current = {};
+  try{
+    const fresh = await window.storage.get(key, SHARED);
+    current = fresh ? JSON.parse(fresh.value) : {};
+  }catch(e){}
+  current[mapKey] = entry;
+  await window.storage.set(key, JSON.stringify(current), SHARED);
+  return current;
+}
+async function setCorrAction(childId, corrKey, status, reason){
+  const mapKey = childId + '::' + corrKey;
+  const entry = {
+    status,
+    reason: status==='cannot' ? String(reason||'').trim() : '',
+    by: SELECTED_CVC===ADMIN_CVC ? 'Admin' : (SELECTED_CVC===TEAM_LEADER_CVC ? 'Team Leader' : (SELECTED_CVC||'')),
+    at: todayISO()
+  };
+  CORR_ACTS[mapKey] = entry; // optimistic local update for a snappy UI
+  render();
+  try{
+    CORR_ACTS = await saveOverlayEntry(KEY_CORR_ACTS, mapKey, entry);
+  }catch(e){
+    showToast('⚠️ មិនអាចរក្សាទុកបានទេ — សូមព្យាយាមម្តងទៀត · Could not save — please try again');
+  }
+}
+async function setHoldAction(childId, status, reason){
+  const entry = {
+    status,
+    reason: status==='cannot' ? String(reason||'').trim() : '',
+    by: SELECTED_CVC===ADMIN_CVC ? 'Admin' : (SELECTED_CVC===TEAM_LEADER_CVC ? 'Team Leader' : (SELECTED_CVC||'')),
+    at: todayISO()
+  };
+  HOLD_ACTS[childId] = entry;
+  render();
+  try{
+    HOLD_ACTS = await saveOverlayEntry(KEY_HOLD_ACTS, childId, entry);
+  }catch(e){
+    showToast('⚠️ មិនអាចរក្សាទុកបានទេ — សូមព្យាយាមម្តងទៀត · Could not save — please try again');
+  }
+}
+
+/* ---- data assembly ---- */
+function isSeesAll(){ return SELECTED_CVC === ADMIN_CVC || SELECTED_CVC === TEAM_LEADER_CVC; }
+
+function buildCorrItems(){
+  const seesAll = isSeesAll();
+  const scopeIds = seesAll
+    ? new Set(Object.keys(DB.corr))
+    : new Set(Object.values(DB.rc).filter(r => cvcForChild(r.ChildID) === SELECTED_CVC).map(r => r.ChildID));
+  const items = [];
+  scopeIds.forEach(id => {
+    const byChild = DB.corr[id];
+    if(!byChild) return;
+    Object.entries(byChild).forEach(([key, c]) => {
+      const cat = corrCategory(c);
+      if(cat === 'closedOnTime' || cat === 'closedOverdue') return; // already closed centrally in Horizon
+      const act = CORR_ACTS[id + '::' + key] || null;
+      items.push(Object.assign({ key, childId:id }, c, { _act: act }));
+    });
+  });
+  items.sort((a,b) => {
+    const da = daysUntil(a.Due), db = daysUntil(b.Due);
+    if(da===null) return 1; if(db===null) return -1; return da - db;
+  });
+  return items;
+}
+function buildHoldItems(){
+  const seesAll = isSeesAll();
+  const list = Object.values(DB.rc).filter(r => classifyStatus(r.RCStatus) === 'hold');
+  const scoped = seesAll ? list : list.filter(r => cvcForChild(r.ChildID) === SELECTED_CVC);
+  const items = scoped.map(r => Object.assign({}, r, { _act: HOLD_ACTS[r.ChildID] || null }));
+  items.sort((a,b) => {
+    const da = a.RCStatusDate ? daysSince(a.RCStatusDate) : null;
+    const db = b.RCStatusDate ? daysSince(b.RCStatusDate) : null;
+    if(da===null && db===null) return String(a.ChildID).localeCompare(String(b.ChildID));
+    if(da===null) return 1; if(db===null) return -1; return db - da;
+  });
+  return items;
+}
+
+/* ---- rendering ---- */
+function render(){
+  if(LOAD_ERROR){
+    mainEl.innerHTML = `
+    <div class="warn khmer">
+      មិនអាចភ្ជាប់ទៅកាន់ទិន្នន័យបានទេ។ សូមពិនិត្យអ៊ីនធឺណិត រួចចុច 🔄 ដើម្បីព្យាយាមម្តងទៀត។<br/>
+      Could not connect to shared data. Check your internet connection and tap 🔄 to try again.
+    </div>`;
+    return;
+  }
+  if(!_fbReady){
+    mainEl.innerHTML = `
+    <div class="warn khmer">
+      កម្មវិធីនេះមិនទាន់បានភ្ជាប់ជាមួយទិន្នន័យរួមទេ។ សូមកែ firebaseConfig នៅដើមឯកសារនេះ (ដូចនៅក្នុង index.html) ។<br/>
+      This app isn't connected to shared data yet — edit firebaseConfig near the top of this file (paste the same config used in index.html).
+    </div>`;
+    return;
+  }
+  if(!SELECTED_CVC){ renderPicker(); return; }
+  if(CVC_VIEW === 'hold') renderHoldView(); else renderCorrView();
+}
+
+function renderPicker(){
+  const names = allCvcNames();
+  mainEl.innerHTML = `
+  <div class="card">
+    <label class="label khmer">ខ្ញុំជា CVC · I am CVC</label>
+    <select class="select" id="cvcSelfSelect">
+      <option value="">— ជ្រើសរើសឈ្មោះរបស់អ្នក · Select your name —</option>
+      <option value="${ADMIN_CVC}">👑 អ្នកគ្រប់គ្រង (មើលទាំងអស់) · Admin — see all</option>
+      <option value="${TEAM_LEADER_CVC}">👔 ប្រធានក្រុម (មើលទាំងអស់) · Team Leader — see all</option>
+      ${names.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('')}
+    </select>
+    ${!names.length ? `<div class="help khmer">មិនទាន់មានបញ្ជីភូមិ → CVC ទេ។<br/>No village → CVC list found yet.</div>` : ''}
+  </div>
+  <div class="help khmer">
+    ជ្រើសរើសឈ្មោះរបស់អ្នកម្តងគត់ — ទូរស័ព្ទនេះនឹងចងចាំវាលើកក្រោយ។ CVC នីមួយៗឃើញតែសំបុត្រ និងកុមារ Hold ក្នុងភូមិខ្លួនប៉ុណ្ណោះ។ ប្រធានក្រុម/អ្នកគ្រប់គ្រងឃើញទាំងអស់។<br/>
+    Choose your name once — this phone will remember it. Each CVC only sees correspondence and Hold RC for their own village(s). Team Leader/Admin see everything.
+  </div>`;
+  const sel = document.getElementById('cvcSelfSelect');
+  if(sel){
+    sel.addEventListener('change', async () => {
+      SELECTED_CVC = sel.value || null;
+      try{ await window.storage.set(KEY_CVC_SELF, SELECTED_CVC || '', false); }catch(e){}
+      render();
+    });
+  }
+}
+
+function topSwitcherHtml(corrCount, holdCount){
+  const seesAll = isSeesAll();
+  const whoLabel = SELECTED_CVC===ADMIN_CVC ? '👑 Admin' : (SELECTED_CVC===TEAM_LEADER_CVC ? '👔 Team Leader' : SELECTED_CVC);
+  return `
+  <div class="card" style="padding:12px 14px;">
+    <div class="sd-row" style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+      <div class="khmer" style="font-size:12.5px;"><b>${esc(whoLabel)}</b>${seesAll ? ' <span style="color:var(--ink-soft);">· all villages</span>' : ''}</div>
+      <div id="btnSwitchWho" style="font-size:11.5px; color:var(--teal); font-weight:700; cursor:pointer;">ប្តូរ · Switch</div>
+    </div>
+  </div>
+  <div class="segwrap">
+    <div class="seg ${CVC_VIEW==='corr'?'active':''}" data-view="corr">ការឆ្លើយឆ្លង · Correspondence <span class="n">${corrCount}</span></div>
+    <div class="seg ${CVC_VIEW==='hold'?'active':''}" data-view="hold">កុមារ Hold · Hold RC <span class="n">${holdCount}</span></div>
+  </div>`;
+}
+
+function searchBoxHtml(placeholderKh, placeholderEn){
+  return `
+  <div class="searchwrap">
+    <span class="ic">🔍</span>
+    <input class="input" id="itemSearch" placeholder="${esc(placeholderKh)} · ${esc(placeholderEn)}" value="${esc(SEARCH_Q)}" autocomplete="off"/>
+  </div>`;
+}
+
+function matchesSearch(hayArr){
+  if(!SEARCH_Q.trim()) return true;
+  const q = SEARCH_Q.trim().toLowerCase();
+  return hayArr.some(h => String(h||'').toLowerCase().includes(q));
+}
+
+function renderCorrView(){
+  const allItems = buildCorrItems();
+  const seesAll = isSeesAll();
+  const overdueCount = allItems.filter(c => daysUntil(c.Due)!==null && daysUntil(c.Due)<0 && (!c._act || c._act.status!=='done')).length;
+  const doneCount = allItems.filter(c => c._act && c._act.status==='done').length;
+  const cannotCount = allItems.filter(c => c._act && c._act.status==='cannot').length;
+
+  let visible = allItems.filter(c => matchesSearch([khChildNameFor(DB.rc[c.childId], c.ChildName), c.childId, c.Type]));
+  if(HIDE_DONE) visible = visible.filter(c => !c._act || c._act.status!=='done');
+
+  const holdCountForTab = buildHoldItems().length;
+
+  const cardsHtml = visible.map(c => corrCardHtml(c, seesAll)).join('') || `
+    <div class="empty">
+      <div class="big">🎉</div>
+      <div class="khmer">${HIDE_DONE && allItems.length ? 'អ្នកបានធ្វើរួចទាំងអស់ហើយ!' : 'មិនមានសំបុត្រណាត្រូវការសម្រាប់អ្នកឡើយ។'}</div>
+      <div>${HIDE_DONE && allItems.length ? 'You\'re all caught up!' : 'No correspondence needs your attention right now.'}</div>
+    </div>`;
+  const toggleLabel = HIDE_DONE ? `បង្ហាញទាំងអស់ (${allItems.length}) · Show all` : 'បង្ហាញតែមិនទាន់រួច · Hide done';
+
+  mainEl.innerHTML = `
+    ${topSwitcherHtml(allItems.length, holdCountForTab)}
+    <div class="kpis">
+      <div class="kpi red"><div class="num">${overdueCount}</div><div class="lbl">ហួសកំណត់ · Overdue</div></div>
+      <div class="kpi teal"><div class="num">${doneCount}</div><div class="lbl">Done</div></div>
+      <div class="kpi gold"><div class="num">${cannotCount}</div><div class="lbl">Can't do</div></div>
+    </div>
+    ${searchBoxHtml('ស្វែងរកតាមឈ្មោះ ឬលេខកូដ','Search by name or code')}
+    <div class="rowbtn"><button class="btn ghost" id="btnToggleDone">${toggleLabel}</button></div>
+    <div id="itemList">${cardsHtml}</div>
+  `;
+  bindCommon();
+  bindCorrActions();
+}
+
+function corrCardHtml(c, seesAll){
+  const days = daysUntil(c.Due);
+  const isOverdue = days!==null && days<0;
+  let dayLabel='', dayClass='ok';
+  if(days!==null){
+    if(isOverdue){ dayLabel = `ហួសកំណត់ ${Math.abs(days)} ថ្ងៃ · ${Math.abs(days)}d overdue`; dayClass='overdue'; }
+    else if(days===0){ dayLabel = 'ដល់កំណត់ថ្ងៃនេះ · Due today'; dayClass='soon'; }
+    else { dayLabel = `នៅសល់ ${days} ថ្ងៃ · ${days}d left`; dayClass = days<=3 ? 'soon' : 'ok'; }
+  }
+  const status = c._act ? c._act.status : '';
+  const cardClass = status==='done' ? 'done' : status==='cannot' ? 'cannot' : (isOverdue ? 'overdue' : 'pending');
+  const typeKh = corrTypeKh(c.Type);
+  const showBothType = typeKh !== c.Type;
+  const rc = DB.rc[c.childId];
+  const villageTxt = rc ? villageNameOf(rc) : (c.Community || '—');
+  const assignedCvc = seesAll ? cvcForChild(c.childId) : '';
+  const reasonOpen = !!REASON_OPEN[c.key] || status==='cannot';
+  return `
+  <div class="item ${cardClass}">
+    <div class="name khmer">${esc(khChildNameFor(rc, c.ChildName))} <span class="id">${esc(c.childId)}</span></div>
+    <div class="meta khmer">${esc(villageTxt)} · ${esc(typeKh)}${showBothType ? ` (${esc(c.Type)})` : ''}</div>
+    ${seesAll ? `<div class="cvcline">CVC: <b>${esc(assignedCvc || '— unassigned —')}</b></div>` : ''}
+    <div class="meta">ថ្ងៃផុតកំណត់ · Due: ${esc(c.Due || '—')}</div>
+    ${dayLabel ? `<span class="days ${dayClass}">${esc(dayLabel)}</span>` : ''}
+    ${status ? `<div class="statusline">ស្ថានភាព · Status: <b>${esc(CVC_STATUS_META[status].kh)} · ${esc(CVC_STATUS_META[status].en)}</b>${status==='cannot' && c._act.reason ? ` — ${esc(c._act.reason)}` : ''}</div>` : ''}
+    <div class="actions">
+      <button data-act-key="${esc(c.key)}" data-act-child="${esc(c.childId)}" data-act-status="done" class="${status==='done'?'on-done':''}">✅ រួច<br/>Done</button>
+      <button data-act-key="${esc(c.key)}" data-act-child="${esc(c.childId)}" data-act-status="pending" class="${status==='pending'?'on-pending':''}">⏳ រង់ចាំ<br/>Pending</button>
+      <button data-act-key="${esc(c.key)}" data-act-child="${esc(c.childId)}" data-act-status="cannot" class="${status==='cannot'?'on-cannot':''}">❌ អត់បាន<br/>Can't</button>
+    </div>
+    ${reasonOpen ? `
+    <div class="reasonbox">
+      <textarea class="ta" data-reason-input="${esc(c.key)}" placeholder="មូលហេតុ · Reason…">${esc(REASON_DRAFTS[c.key] !== undefined ? REASON_DRAFTS[c.key] : (c._act && c._act.reason || ''))}</textarea>
+      <button class="save" data-reason-save-key="${esc(c.key)}" data-reason-save-child="${esc(c.childId)}">រក្សាទុកមូលហេតុ · Save reason</button>
+    </div>` : ''}
+  </div>`;
+}
+
+function renderHoldView(){
+  const allItems = buildHoldItems();
+  const seesAll = isSeesAll();
+  const inprogressCount = allItems.filter(r => r._act && r._act.status==='inprogress').length;
+  const resolvedCount = allItems.filter(r => r._act && r._act.status==='resolved').length;
+  const cannotCount = allItems.filter(r => r._act && r._act.status==='cannot').length;
+
+  let visible = allItems.filter(r => matchesSearch([khChildNameFor(r, r.ChildNameEn), r.ChildID]));
+  if(HIDE_DONE) visible = visible.filter(r => !r._act || r._act.status!=='resolved');
+
+  const corrCountForTab = buildCorrItems().length;
+
+  const cardsHtml = visible.map(r => holdCardHtml(r, seesAll)).join('') || `
+    <div class="empty">
+      <div class="big">🎉</div>
+      <div class="khmer">${HIDE_DONE && allItems.length ? 'អ្នកបានដោះស្រាយ Hold ទាំងអស់ហើយ!' : 'មិនមានកុមារ Hold សម្រាប់អ្នកឡើយ។'}</div>
+      <div>${HIDE_DONE && allItems.length ? 'All your Hold RC are resolved!' : 'No Hold-status RC for you right now.'}</div>
+    </div>`;
+  const toggleLabel = HIDE_DONE ? `បង្ហាញទាំងអស់ (${allItems.length}) · Show all` : 'បង្ហាញតែមិនទាន់ដោះស្រាយ · Hide resolved';
+
+  mainEl.innerHTML = `
+    ${topSwitcherHtml(corrCountForTab, allItems.length)}
+    <div class="kpis">
+      <div class="kpi gold"><div class="num">${inprogressCount}</div><div class="lbl">In progress</div></div>
+      <div class="kpi teal"><div class="num">${resolvedCount}</div><div class="lbl">Resolved</div></div>
+      <div class="kpi red"><div class="num">${cannotCount}</div><div class="lbl">Can't reach</div></div>
+    </div>
+    ${searchBoxHtml('ស្វែងរកតាមឈ្មោះ ឬលេខកូដ','Search by name or code')}
+    <div class="rowbtn"><button class="btn ghost" id="btnToggleDone">${toggleLabel}</button></div>
+    <div id="itemList">${cardsHtml}</div>
+  `;
+  bindCommon();
+  bindHoldActions();
+}
+
+function holdCardHtml(r, seesAll){
+  const status = r._act ? r._act.status : '';
+  const cardClass = status==='resolved' ? 'done' : status==='cannot' ? 'cannot' : 'pending';
+  const villageTxt = villageNameOf(r);
+  const assignedCvc = seesAll ? cvcForChild(r.ChildID) : '';
+  const reasonOpen = !!REASON_OPEN['h'+r.ChildID] || status==='cannot';
+  const sinceTxt = r.RCStatusDate ? `ចាប់តាំងពី · Since ${esc(r.RCStatusDate)}` : '';
+  return `
+  <div class="item ${cardClass}">
+    <div class="name khmer">${esc(khChildNameFor(r, r.ChildNameEn))} <span class="id">${esc(r.ChildID)}</span></div>
+    <div class="meta khmer">${esc(villageTxt)} <span class="badge b-hold" style="margin-left:6px;">ផ្អាកបណ្ដោះអាសន្ន · On Hold</span></div>
+    ${seesAll ? `<div class="cvcline">CVC: <b>${esc(assignedCvc || '— unassigned —')}</b></div>` : ''}
+    ${sinceTxt ? `<div class="meta">${sinceTxt}</div>` : ''}
+    ${status ? `<div class="statusline">ស្ថានភាព · Status: <b>${esc(HOLD_STATUS_META[status].kh)} · ${esc(HOLD_STATUS_META[status].en)}</b>${status==='cannot' && r._act.reason ? ` — ${esc(r._act.reason)}` : ''}</div>` : ''}
+    <div class="actions">
+      <button data-hact-child="${esc(r.ChildID)}" data-hact-status="inprogress" class="${status==='inprogress'?'on-pending':''}">🔄 កំពុងធ្វើ<br/>In progress</button>
+      <button data-hact-child="${esc(r.ChildID)}" data-hact-status="resolved" class="${status==='resolved'?'on-done':''}">✅ ដោះស្រាយ<br/>Resolved</button>
+      <button data-hact-child="${esc(r.ChildID)}" data-hact-status="cannot" class="${status==='cannot'?'on-cannot':''}">❌ ទាក់ទងអត់បាន<br/>Can't reach</button>
+    </div>
+    ${reasonOpen ? `
+    <div class="reasonbox">
+      <textarea class="ta" data-hreason-input="${esc(r.ChildID)}" placeholder="មូលហេតុ · Reason…">${esc(REASON_DRAFTS['h'+r.ChildID] !== undefined ? REASON_DRAFTS['h'+r.ChildID] : (r._act && r._act.reason || ''))}</textarea>
+      <button class="save" data-hreason-save="${esc(r.ChildID)}">រក្សាទុកមូលហេតុ · Save reason</button>
+    </div>` : ''}
+  </div>`;
+}
+
+/* ---- bindings ---- */
+function bindCommon(){
+  document.querySelectorAll('.seg[data-view]').forEach(el => {
+    el.addEventListener('click', () => { CVC_VIEW = el.dataset.view; SEARCH_Q=''; render(); });
+  });
+  const sw = document.getElementById('btnSwitchWho');
+  if(sw) sw.addEventListener('click', () => { SELECTED_CVC = null; render(); });
+  const search = document.getElementById('itemSearch');
+  if(search){
+    search.addEventListener('input', () => { SEARCH_Q = search.value; refreshListOnly(); });
+    search.focus(); search.setSelectionRange(search.value.length, search.value.length);
+  }
+  const toggle = document.getElementById('btnToggleDone');
+  if(toggle) toggle.addEventListener('click', () => { HIDE_DONE = !HIDE_DONE; render(); });
+}
+// Re-render just the list + kpis without stealing focus from the search box on every keystroke
+function refreshListOnly(){
+  if(CVC_VIEW==='hold') renderHoldView(); else renderCorrView();
+}
+
+function bindCorrActions(){
+  document.querySelectorAll('[data-act-status]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const key = btn.dataset.actKey, childId = btn.dataset.actChild, status = btn.dataset.actStatus;
+      if(status==='cannot'){ REASON_OPEN[key] = true; render(); return; }
+      REASON_OPEN[key] = false; delete REASON_DRAFTS[key];
+      setCorrAction(childId, key, status);
+      showToast(status==='done' ? 'បានកត់ត្រាថាបានធ្វើរួច · Marked done' : 'បានកត់ត្រាថាកំពុងរង់ចាំ · Marked pending');
+    });
+  });
+  document.querySelectorAll('[data-reason-input]').forEach(ta => {
+    ta.addEventListener('input', () => { REASON_DRAFTS[ta.dataset.reasonInput] = ta.value; });
+  });
+  document.querySelectorAll('[data-reason-save-key]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const key = btn.dataset.reasonSaveKey, childId = btn.dataset.reasonSaveChild;
+      const reason = (REASON_DRAFTS[key] !== undefined ? REASON_DRAFTS[key] : '').trim();
+      if(!reason){ showToast('សូមបញ្ចូលមូលហេតុសិន · Please enter a reason first'); return; }
+      setCorrAction(childId, key, 'cannot', reason);
+      delete REASON_DRAFTS[key]; REASON_OPEN[key] = false;
+      showToast('បានរក្សាទុក · Saved');
+    });
+  });
+}
+function bindHoldActions(){
+  document.querySelectorAll('[data-hact-status]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const childId = btn.dataset.hactChild, status = btn.dataset.hactStatus;
+      const key = 'h'+childId;
+      if(status==='cannot'){ REASON_OPEN[key] = true; render(); return; }
+      REASON_OPEN[key] = false; delete REASON_DRAFTS[key];
+      setHoldAction(childId, status);
+      showToast(status==='resolved' ? 'បានកត់ត្រាថាដោះស្រាយរួច · Marked resolved' : 'បានកត់ត្រាថាកំពុងដោះស្រាយ · Marked in progress');
+    });
+  });
+  document.querySelectorAll('[data-hreason-input]').forEach(ta => {
+    ta.addEventListener('input', () => { REASON_DRAFTS['h'+ta.dataset.hreasonInput] = ta.value; });
+  });
+  document.querySelectorAll('[data-hreason-save]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const childId = btn.dataset.hreasonSave, key = 'h'+childId;
+      const reason = (REASON_DRAFTS[key] !== undefined ? REASON_DRAFTS[key] : '').trim();
+      if(!reason){ showToast('សូមបញ្ចូលមូលហេតុសិន · Please enter a reason first'); return; }
+      setHoldAction(childId, 'cannot', reason);
+      delete REASON_DRAFTS[key]; REASON_OPEN[key] = false;
+      showToast('បានរក្សាទុក · Saved');
+    });
+  });
+}
+
+/* ---- refresh ---- */
+async function doRefresh(){
+  refreshBtn.classList.add('spinning');
+  await loadAll();
+  refreshBtn.classList.remove('spinning');
+  render();
+  if(!LOAD_ERROR) showToast('បានធ្វើបច្ចុប្បន្នភាព · Refreshed');
+}
+refreshBtn.addEventListener('click', doRefresh);
+
+/* ---- init ---- */
+(async function init(){
+  await loadAll();
+  render();
+})();
+
+})();
+</script>
+</body>
+</html>
