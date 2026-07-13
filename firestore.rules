@@ -1,0 +1,21 @@
+rules_version = '2';
+
+// Scoped to exactly the one collection js/storage-firebase.js uses.
+// This is intentionally open (no login) to match the app's current
+// "pick your name from a dropdown" trust model — anyone with the
+// Firestore project config (which ships in the public HTML/JS anyway)
+// can read/write. That's fine for a small trusted team behind a
+// private link, but it is NOT safe if this link is ever made public.
+//
+// To harden later: add Firebase Auth (e.g. email link sign-in) and
+// change `if true` below to `if request.auth != null`.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /sd_storage/{docId} {
+      allow read, write: if true;
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
